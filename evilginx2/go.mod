@@ -13,8 +13,8 @@ require (
 	github.com/inconshreveable/go-vhost v0.0.0-20160627193104-06d84117953b
 	github.com/jinzhu/gorm v1.9.12
 	github.com/mattn/go-colorable v0.1.4 // indirect
-	github.com/mattn/go-sqlite3 v2.0.3+incompatible 
-	github.com/miekg/dns v1.1.22
+	github.com/mattn/go-sqlite3 v2.0.3+incompatible
+	github.com/miekg/dns v1.1.25
 	github.com/mwitkow/go-http-dialer v0.0.0-20161116154839-378f744fb2b8
 	github.com/spf13/viper v1.4.0
 	github.com/tidwall/btree v0.0.0-20170113224114-9876f1454cf0 // indirect
