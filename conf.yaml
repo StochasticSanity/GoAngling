@@ -1,0 +1,5 @@
+domain: example.com
+subdomains: foobar.example.com
+redirect: false
+unauth_url: google.com
+rid: client_id
