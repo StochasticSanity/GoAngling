@@ -41,7 +41,7 @@ function install_dependencies() {
 
     # Install required packages
     info "Installing required packages..."
-    sudo apt-get install -y build-essential openssl wget git tmux net-tools certbot
+    sudo apt-get install -y build-essential openssl wget git tmux net-tools jq certbot
     success "Required packages installed successfully."
 
 }
@@ -120,7 +120,7 @@ function install_latest_go() {
 }
 
 function replace_rid() {
-    local directory="./{gophish,evilginx2}"
+    local directory="gophish evilginx2"
     local string_to_replace="client_id"
     local replacement_string="$rid"
     
