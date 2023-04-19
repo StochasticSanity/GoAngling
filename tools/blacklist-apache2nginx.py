@@ -4,7 +4,7 @@ Script to convert Apache blacklist rules into Nginx format
 Author: Joseph Erdosy
 
 Usage:
-    python apache2nginx.py output_file.conf
+    python blacklist-apache2nginx.py output_file.conf
 
 Input:
     The input file is specified by the `input_file` variable and should be an Apache configuration file named "blacklist.conf".
@@ -16,11 +16,11 @@ Notes:
     - The script assumes that the input file contains `Require not ip` lines with IP ranges to block.
     - The script uses the `re` module, which should be installed.
     - The script generates `deny` statements that deny access to the specified IP ranges in Nginx syntax.
-    - The output file overwrites the input file.
 
 References:
     - Nginx `deny` directive: https://nginx.org/en/docs/http/ngx_http_access_module.html#deny
     - Python Regular Expression HOWTO: https://docs.python.org/3/howto/regex.html
+    - Apache access control: https://httpd.apache.org/docs/2.4/howto/access.html
 """
 
 import re

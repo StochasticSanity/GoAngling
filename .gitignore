@@ -110,8 +110,5 @@ _cgo_export.*
 
 _testmain.go
 
-gophish/gophish_admin.crt
-gophish/gophish_admin.key
-
 *.exe
 gophish.db*
